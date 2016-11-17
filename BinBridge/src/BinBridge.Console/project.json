@@ -5,7 +5,8 @@
   },
 
   "dependencies": {
-    "BinBridge.Connector": "1.0.0-*",
+    "BinBridge.Cryptography": "1.0.0-*",
+    "BinBridge.Ssh": "1.0.0-*",
     "Microsoft.NETCore.App": {
         "type": "platform",
         "version": "1.0.1"
