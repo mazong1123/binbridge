@@ -16,6 +16,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "BinBridge.Ssh", "src\BinBri
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "BinBridge.Cryptography", "src\BinBridge.Cryptography\BinBridge.Cryptography.xproj", "{678665A9-D92D-4436-B731-1E7B0E517064}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "BinBridge.Core", "src\BinBridge.Core\BinBridge.Core.xproj", "{AD2D26E4-526C-4951-B28E-437A74482249}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +36,10 @@ Global
 		{678665A9-D92D-4436-B731-1E7B0E517064}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{678665A9-D92D-4436-B731-1E7B0E517064}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{678665A9-D92D-4436-B731-1E7B0E517064}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD2D26E4-526C-4951-B28E-437A74482249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD2D26E4-526C-4951-B28E-437A74482249}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD2D26E4-526C-4951-B28E-437A74482249}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD2D26E4-526C-4951-B28E-437A74482249}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,5 +48,6 @@ Global
 		{585B60D7-1408-41C1-9471-C235FDC9A7D5} = {D1C73928-4FFC-4CE4-B22A-0628827AB0AE}
 		{333B164F-278C-41A0-9F81-5E01281029F3} = {D1C73928-4FFC-4CE4-B22A-0628827AB0AE}
 		{678665A9-D92D-4436-B731-1E7B0E517064} = {D1C73928-4FFC-4CE4-B22A-0628827AB0AE}
+		{AD2D26E4-526C-4951-B28E-437A74482249} = {D1C73928-4FFC-4CE4-B22A-0628827AB0AE}
 	EndGlobalSection
 EndGlobal
