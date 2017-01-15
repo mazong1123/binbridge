@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace BinBridge.Console
@@ -19,21 +20,36 @@ namespace BinBridge.Console
             Dictionary<string, FileOrDirectoryInfo> localRelativePathHash = new Dictionary<string, FileOrDirectoryInfo>();
 
             var localBaseDirectoryLength = localBaseDirectory.Length;
-            foreach(var lfd in localFileOrDirectories)
+            foreach (var lfd in localFileOrDirectories)
             {
-                var relativePath = lfd.Path.Substring(localBaseDirectoryLength);
-                localRelativePathHash.Add(relativePath, lfd);
+                localRelativePathHash.Add(lfd.RelativePath, lfd);
             }
 
             Dictionary<string, FileOrDirectoryInfo> remoteRelativePathHash = new Dictionary<string, FileOrDirectoryInfo>();
 
             var remoteBaseDirectoryLength = remoteBaseDirectory.Length;
-            foreach(var rfd in remoteFileOrDirectories)
+            foreach (var rfd in remoteFileOrDirectories)
             {
-                var relativePath = rfd.Path.Substring(remoteBaseDirectoryLength);
-                remoteRelativePathHash.Add(relativePath, rfd);
+                remoteRelativePathHash.Add(rfd.RelativePath, rfd);
             }
 
+            foreach (var remoteRelativePath in remoteRelativePathHash.Keys)
+            {
+                if (!localRelativePathHash.ContainsKey(remoteRelativePath))
+                {
+                    // Does not exist in local file path collection. Need to be removed.
+                    difference.RemovedFileOrDirectories.Add(remoteRelativePathHash[remoteRelativePath]);
+                }
+            }
+
+            foreach (var localRelativePath in localRelativePathHash.Keys)
+            {
+                if (!remoteRelativePathHash.ContainsKey(localRelativePath))
+                {
+                    // Does not exist in remote file path collection. Need to be added.
+                    difference.AddedFileOrDirectories.Add(localRelativePathHash[localRelativePath]);
+                }
+            }
 
             return difference;
         }
@@ -41,11 +57,14 @@ namespace BinBridge.Console
         public static void Main(string[] args)
         {
             string host = "127.0.1.1";
-            string userName = "mazong1123";
-            string password = "mazong1123!@#$";
+            string userName = "";
+            string password = "";
 
             string srcDirectory = @"E:\Workspace\github\binbridge\BinBridge\testdata";
             string destDirectory = "/home/mazong1123/binbridge/test";
+
+            var localBaseDirectoryLength = srcDirectory.Length;
+            var remoteBaseDirectoryLength = destDirectory.Length;
 
             using (SshClient sshClient = new SshClient(host, userName, password))
             {
@@ -84,6 +103,7 @@ namespace BinBridge.Console
                     FileOrDirectoryInfo fdi = new FileOrDirectoryInfo();
                     fdi.Type = typeString.StartsWith("d") ? 1 : 0;
                     fdi.Path = path;
+                    fdi.RelativePath = path.Substring(remoteBaseDirectoryLength);
                     fdi.Size = long.Parse(size);
 
                     // TODO: Parse last modified time.
@@ -103,7 +123,8 @@ namespace BinBridge.Console
                     {
                         Type = 1,
                         LastModifiedTime = ld.LastWriteTimeUtc,
-                        Path = ld.FullName.Substring(2).Replace("\\", "/"),
+                        Path = ld.FullName,
+                        RelativePath = ld.FullName.Substring(localBaseDirectoryLength).Replace("\\", "/"),
                         Size = 0
                     };
 
@@ -116,7 +137,8 @@ namespace BinBridge.Console
                     {
                         Type = 0,
                         LastModifiedTime = lf.LastAccessTimeUtc,
-                        Path = lf.FullName.Substring(2).Replace("\\", "/"),
+                        Path = lf.FullName,
+                        RelativePath = lf.FullName.Substring(localBaseDirectoryLength).Replace("\\", "/"),
                         Size = lf.Length
                     };
 
@@ -127,21 +149,45 @@ namespace BinBridge.Console
                 var difference = FindDifference(localFileAndDirectoryInfo, remoteFileAndDirectoryInfo,
                     srcDirectory.Substring(2).Replace("\\", "/"), destDirectory);
 
-                // Delete remote file or folders.
-                string fileToDelete = destDirectory + "/test.c";
-
-                var deleteResult = command.Execute("rm -f " + fileToDelete);
-
-                // Upload added or changed files.
-                using (SftpClient sftpClient = new SftpClient(sshClient.ConnectionInfo))
+                if (difference.RemovedFileOrDirectories.Count > 0)
                 {
-                    sftpClient.Connect();
-                    FileStream fs = new FileStream(srcDirectory + "\\test.c", FileMode.Open);
+                    // Delete remote file or folders.
+                    StringBuilder deleteCommand = new StringBuilder("rm -rf ");
+                    foreach (var fdr in difference.RemovedFileOrDirectories)
+                    {
+                        deleteCommand.Append(fdr.Path).Append(" ");
+                    }
 
-                    sftpClient.UploadFile(fs, destDirectory + "/test.c");
-
-                    fs.Dispose();
+                    command.Execute(deleteCommand.ToString());
                 }
+
+                if (difference.AddedFileOrDirectories.Count > 0)
+                {
+                    // Upload added or changed files.
+                    using (SftpClient sftpClient = new SftpClient(sshClient.ConnectionInfo))
+                    {
+                        sftpClient.Connect();
+
+                        foreach (var fda in difference.AddedFileOrDirectories)
+                        {
+                            var destFilePath = destDirectory + fda.RelativePath.Replace("\\", "/");
+
+                            if (fda.Type == 0)
+                            {
+                                FileStream fs = new FileStream(fda.Path, FileMode.Open);
+
+                                sftpClient.UploadFile(fs, destFilePath);
+
+                                fs.Dispose();
+                            }
+                            else
+                            {
+                                sftpClient.CreateDirectory(destFilePath);
+                            }
+                        }
+                    }
+                }
+
             }
         }
     }

@@ -13,6 +13,12 @@ namespace BinBridge.Core
             set;
         }
 
+        public string RelativePath
+        {
+            get;
+            set;
+        }
+
         public long Size
         {
             get;
